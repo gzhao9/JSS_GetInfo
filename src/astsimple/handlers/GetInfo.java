@@ -63,23 +63,13 @@ public class GetInfo extends AbstractHandler {
 					CompilationUnit parse = parse(unit);
 					MethodVisitor visitor = new MethodVisitor();
 					parse.accept(visitor);
-					for (MethodInvocation project_MethodInvocation : visitor.getMethodInvocations()) {// method level
-
-						if (project_MethodInvocation.resolveMethodBinding().getDeclaringClass().getQualifiedName()
-								.startsWith("org.mockito.")) {
-							mockito_arr.add(unit.getPath().toString() + ","
-//									+ method.resolveMethodBinding().getDeclaringClass().getQualifiedName() + "|||"
-//									+ method.resolveMethodBinding().getDeclaringClass().getClass().getName() + "|||"
-									+ project_MethodInvocation.getName());
-						}
-						if (project_MethodInvocation.resolveMethodBinding().getDeclaringClass().getQualifiedName()
-								.startsWith("org.easymock")) {
-							easymock_arr.add(unit.getPath().toString() + ","
-//									+ method.resolveMethodBinding().getDeclaringClass().getQualifiedName() + "|||"
-//									+ method.resolveMethodBinding().getDeclaringClass().getClass().getName() + "|||"
-									+ project_MethodInvocation.getName());
-						}
-
+//					unit.getClass(); //weather can use this to method level?
+					for (MethodInvocation Mockito_method:visitor.getMockitoMethodInvocations()) {
+						mockito_arr.add(unit.getPath().toString() + ","+ Mockito_method.getName()+'\n');
+					}
+					
+					for (MethodInvocation EasyMock_method:visitor.getEasyMockMethodInvocations()) {
+						easymock_arr.add(unit.getPath().toString() + ","+ EasyMock_method.getName()+'\n');
 					}
 				}
 
@@ -95,6 +85,7 @@ public class GetInfo extends AbstractHandler {
 		// check weather have mockito api
 		if (mockito_arr.size() > 0) {
 			try (FileOutputStream fos = new FileOutputStream(mockito_out)) {
+				fos.write("file_path,method\n".getBytes());
 				for (String x : mockito_arr) {
 					fos.write(x.getBytes());
 				}
@@ -112,6 +103,7 @@ public class GetInfo extends AbstractHandler {
 		// check weather have easymock api
 		if (easymock_arr.size() > 0) {
 			try (FileOutputStream fos = new FileOutputStream(easymock_out)) {
+				fos.write("file_path,method\n".getBytes());
 				for (String x : easymock_arr) {
 					fos.write(x.getBytes());
 				}
@@ -129,6 +121,7 @@ public class GetInfo extends AbstractHandler {
 	private static CompilationUnit parse(ICompilationUnit unit) {
 		ASTParser parser = ASTParser.newParser(AST.JLS16);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+//		parser.setKind(ASTParser.K_CLASS_BODY_DECLARATIONS);
 		parser.setSource(unit);
 		parser.setResolveBindings(true);
 		return (CompilationUnit) parser.createAST(null); // parse
