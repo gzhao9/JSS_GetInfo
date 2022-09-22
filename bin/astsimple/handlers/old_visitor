@@ -10,9 +10,21 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class MethodVisitor extends ASTVisitor{
+public class old_visitor extends ASTVisitor{
 
 	List<MethodDeclaration> methods = new ArrayList<>();
+
+	@Override
+    public boolean visit(MethodDeclaration node) {
+        methods.add(node);
+//        return super.visit(node);
+        return true;
+    }
+
+    public List<MethodDeclaration> getMethods() {
+        return methods;
+    }
+    
     
     List<MethodInvocation> methodInvocation = new ArrayList<>();
     
@@ -20,6 +32,8 @@ public class MethodVisitor extends ASTVisitor{
     public boolean visit(MethodInvocation node) {
     	
     	methodInvocation.add(node);
+//    	System.out.println(node);
+//    	return super.visit(node);
     	return true;
     }
     
@@ -42,7 +56,21 @@ public class MethodVisitor extends ASTVisitor{
     }
     
     
-
+    
+    List<ClassInstanceCreation> ClassCreation = new ArrayList<>();
+    
+    @Override
+    public boolean visit(ClassInstanceCreation node) {
+    	
+    	ClassCreation.add(node);
+//    	return super.visit(node);
+    	return true;
+    }
+    
+    public List<ClassInstanceCreation> getClassCreation(){
+    	return ClassCreation;
+    }
+    
     
     
     
