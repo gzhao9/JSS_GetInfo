@@ -1,7 +1,7 @@
 package astsimple.handlers;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -29,6 +29,7 @@ public class GetInfo extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 
@@ -41,11 +42,11 @@ public class GetInfo extends AbstractHandler {
 					analyseMethods(project);
 				}
 			} catch (CoreException e) {
-				System.out.println("sjip "+project.getName());
+				System.out.println("error in "+project.getName());
 			}
 		}
 
-		write_to_txt(projects[0].getName());
+		print_to_csv(projects[0].getName());
 
 		return null;
 	}
@@ -62,23 +63,22 @@ public class GetInfo extends AbstractHandler {
 					CompilationUnit parse = parse(unit);
 					MethodVisitor visitor = new MethodVisitor();
 					parse.accept(visitor);
-					for (MethodInvocation method : visitor.getMethodInvocations()) {// method level
-						
-						if (method.resolveMethodBinding().getDeclaringClass().getQualifiedName()
+					for (MethodInvocation project_MethodInvocation : visitor.getMethodInvocations()) {// method level
+
+						if (project_MethodInvocation.resolveMethodBinding().getDeclaringClass().getQualifiedName()
 								.startsWith("org.mockito.")) {
 							mockito_arr.add(unit.getPath().toString() + ","
 //									+ method.resolveMethodBinding().getDeclaringClass().getQualifiedName() + "|||"
 //									+ method.resolveMethodBinding().getDeclaringClass().getClass().getName() + "|||"
-									+ method.getName());
+									+ project_MethodInvocation.getName());
 						}
-						if (method.resolveMethodBinding().getDeclaringClass().getQualifiedName()
+						if (project_MethodInvocation.resolveMethodBinding().getDeclaringClass().getQualifiedName()
 								.startsWith("org.easymock")) {
 							easymock_arr.add(unit.getPath().toString() + ","
 //									+ method.resolveMethodBinding().getDeclaringClass().getQualifiedName() + "|||"
 //									+ method.resolveMethodBinding().getDeclaringClass().getClass().getName() + "|||"
-									+ method.getName());
+									+ project_MethodInvocation.getName());
 						}
-
 
 					}
 				}
@@ -88,45 +88,42 @@ public class GetInfo extends AbstractHandler {
 
 	}
 
-	private void write_to_txt(String project_name) {
-		try {
-			if (mockito_arr.size() > 0) {
-				PrintWriter mockito_out = new PrintWriter(
-						"C:\\Users\\10590\\OneDrive - stevens.edu\\phd program\\JSS_GetInfo\\src\\astsimple\\handlers\\new_RQ2\\mockito\\"
-								+ project_name + ".csv",
-						"UTF-8");
-				mockito_out.println("file_path,method");
+	private void print_to_csv(String project_name) {
+		String mockito_out = "new_RQ2\\mockito\\" + project_name + ".csv";
+		String easymock_out = "new_RQ2\\easymock\\" + project_name + ".csv";
+
+		// check weather have mockito api
+		if (mockito_arr.size() > 0) {
+			try (FileOutputStream fos = new FileOutputStream(mockito_out)) {
 				for (String x : mockito_arr) {
-
-					mockito_out.println(x);
-				}
-				mockito_out.close();
-			}
-			else {
-				System.out.println("no mockito_out");
-			}
-			
-			if (easymock_arr.size() > 0) {
-				PrintWriter easymock_out = new PrintWriter(
-						"C:\\Users\\10590\\OneDrive - stevens.edu\\phd program\\JSS_GetInfo\\src\\astsimple\\handlers\\new_RQ2\\easymock\\"
-								+ project_name + ".csv",
-						"UTF-8");
-				easymock_out.println("file_path,method");
-				for (String x : easymock_arr) {
-
-					easymock_out.println(x);
+					fos.write(x.getBytes());
 				}
 
-				easymock_out.close();
-			}else {
-				System.out.println("no easymock_out");
-			}
+				// Flush the written bytes to the file
+				fos.flush();
 
-			System.out.println(project_name + " is done!");
-		} catch (IOException e) {
-			System.out.println(e);
+				System.out.println("Text has  been  written to " + (new File(mockito_out)).getAbsolutePath());
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}else {
+			System.out.println("no mockito api");
 		}
+		// check weather have easymock api
+		if (easymock_arr.size() > 0) {
+			try (FileOutputStream fos = new FileOutputStream(easymock_out)) {
+				for (String x : easymock_arr) {
+					fos.write(x.getBytes());
+				}
+				fos.flush();
 
+				System.out.println("Text has  been  written to " + (new File(easymock_out)).getAbsolutePath());
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}else {
+			System.out.println("no easymock api");
+		}
 	}
 
 	private static CompilationUnit parse(ICompilationUnit unit) {
