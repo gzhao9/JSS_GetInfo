@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class MethodVisitor extends ASTVisitor {
 
@@ -22,7 +19,7 @@ public class MethodVisitor extends ASTVisitor {
 
 		methodInvocation.add(node);
 		IMethodBinding binding = node.resolveMethodBinding();
-		if (binding != null) {//sometimes show error with resolveMethodBinding() is null, sometimes is .getDeclaringClass()
+		if ((binding != null)&&(binding.getDeclaringClass()!= null)) {//sometimes show error with resolveMethodBinding() is null, sometimes is .getDeclaringClass()
 			if (binding.getDeclaringClass().getQualifiedName().startsWith("org.mockito")) {
 				mockito_methods.add(node);
 			}
