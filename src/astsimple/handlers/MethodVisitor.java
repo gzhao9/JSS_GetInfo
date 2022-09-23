@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 public class MethodVisitor extends ASTVisitor {
@@ -18,12 +17,11 @@ public class MethodVisitor extends ASTVisitor {
 	public boolean visit(MethodInvocation node) {
 
 		methodInvocation.add(node);
-		IMethodBinding binding = node.resolveMethodBinding();
-		if ((binding != null)&&(binding.getDeclaringClass()!= null)) {//sometimes show error with resolveMethodBinding() is null, sometimes is .getDeclaringClass()
-			if (binding.getDeclaringClass().getQualifiedName().startsWith("org.mockito")) {
+		if ((node.resolveMethodBinding() != null)&&(node.resolveMethodBinding().getDeclaringClass()!= null)) {//sometimes show error with resolveMethodBinding() is null, sometimes is .getDeclaringClass()
+			if (node.resolveMethodBinding().getDeclaringClass().getQualifiedName().startsWith("org.mockito")) {
 				mockito_methods.add(node);
 			}
-			if (binding.getDeclaringClass().getQualifiedName().startsWith("org.easymock")) {
+			if (node.resolveMethodBinding().getDeclaringClass().getQualifiedName().startsWith("org.easymock")) {
 				easymock_methods.add(node);
 			}
 		}
