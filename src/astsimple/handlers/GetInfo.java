@@ -32,7 +32,8 @@ public class GetInfo extends AbstractHandler {
 
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
-
+		mockito_arr.clear();
+		easymock_arr.clear();
 		IProject[] projects = root.getProjects();
 
 		// Loop over all projects
@@ -63,10 +64,13 @@ public class GetInfo extends AbstractHandler {
 					CompilationUnit parse = parse(unit);
 					MethodVisitor visitor = new MethodVisitor();
 					parse.accept(visitor);
+					
 //					unit.getClass(); //weather can use this to method level?
+					
 					for (MethodInvocation Mockito_method:visitor.getMockitoMethodInvocations()) {
 						mockito_arr.add(unit.getPath().toString() + ","+ Mockito_method.getName()+'\n');
 					}
+					
 					
 					for (MethodInvocation EasyMock_method:visitor.getEasyMockMethodInvocations()) {
 						easymock_arr.add(unit.getPath().toString() + ","+ EasyMock_method.getName()+'\n');
