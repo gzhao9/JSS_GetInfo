@@ -27,6 +27,8 @@ public class GetInfo extends AbstractHandler {
 	private ArrayList<String> mockito_arr = new ArrayList<>();
 	private ArrayList<String> easymock_arr = new ArrayList<>();
 
+	private ArrayList<String> err_arr = new ArrayList<>();
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
@@ -43,7 +45,7 @@ public class GetInfo extends AbstractHandler {
 					analyseMethods(project);
 				}
 			} catch (CoreException e) {
-				System.out.println("error in "+project.getName());
+				System.out.println("error in " + project.getName());
 			}
 		}
 
@@ -63,18 +65,21 @@ public class GetInfo extends AbstractHandler {
 					// now create the AST for the ICompilationUnits
 					CompilationUnit parse = parse(unit);
 					MethodVisitor visitor = new MethodVisitor();
-					parse.accept(visitor);
 					
-//					unit.getClass(); //weather can use this to method level?
-					
-					for (MethodInvocation Mockito_method:visitor.getMockitoMethodInvocations()) {
-						mockito_arr.add(unit.getPath().toString() + ","+ Mockito_method.getName()+'\n');
+					try {
+						parse.accept(visitor);
+						for (MethodInvocation Mockito_method : visitor.getMockitoMethodInvocations()) {
+							mockito_arr.add(unit.getPath().toString() + "," + Mockito_method.getName() + '\n');
+						}
+
+						for (MethodInvocation EasyMock_method : visitor.getEasyMockMethodInvocations()) {
+							easymock_arr.add(unit.getPath().toString() + "," + EasyMock_method.getName() + '\n');
+						}
+					} catch (Exception e) {
+						err_arr.add(unit.getPath().toString() + '\n');
 					}
-					
-					
-					for (MethodInvocation EasyMock_method:visitor.getEasyMockMethodInvocations()) {
-						easymock_arr.add(unit.getPath().toString() + ","+ EasyMock_method.getName()+'\n');
-					}
+
+
 				}
 
 			}
@@ -85,6 +90,7 @@ public class GetInfo extends AbstractHandler {
 	private void print_to_csv(String project_name) {
 		String mockito_out = "new_RQ2\\mockito\\" + project_name + ".csv";
 		String easymock_out = "new_RQ2\\easymock\\" + project_name + ".csv";
+		String err = "new_RQ2\\err\\" + project_name + ".csv";
 
 		// check weather have mockito api
 		if (mockito_arr.size() > 0) {
@@ -101,7 +107,7 @@ public class GetInfo extends AbstractHandler {
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
-		}else {
+		} else {
 			System.out.println("no mockito api");
 		}
 		// check weather have easymock api
@@ -117,8 +123,24 @@ public class GetInfo extends AbstractHandler {
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
-		}else {
+		} else {
 			System.out.println("no easymock api");
+		}
+
+		if (err_arr.size() > 0) {
+			try (FileOutputStream fos = new FileOutputStream(err)) {
+				fos.write("file_path\n".getBytes());
+				for (String x : err_arr) {
+					fos.write(x.getBytes());
+				}
+				fos.flush();
+
+				System.out.println("err Text has  been  written to " + (new File(easymock_out)).getAbsolutePath());
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		} else {
+			System.out.println("no err file");
 		}
 	}
 
