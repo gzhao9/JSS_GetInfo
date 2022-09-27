@@ -36,8 +36,9 @@ public class GetInfo extends AbstractHandler {
 		IWorkspaceRoot root = workspace.getRoot();
 		mockito_arr.clear();
 		easymock_arr.clear();
+		err_arr.clear();
 		IProject[] projects = root.getProjects();
-
+		System.out.println(projects.length);
 		// Loop over all projects
 		for (IProject project : projects) {
 			try {
@@ -135,7 +136,7 @@ public class GetInfo extends AbstractHandler {
 				}
 				fos.flush();
 
-				System.out.println("err Text has  been  written to " + (new File(easymock_out)).getAbsolutePath());
+				System.out.println("err Text has  been  written to " + (new File(err)).getAbsolutePath());
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
