@@ -46,7 +46,7 @@ public class GetInfo extends AbstractHandler {
 			return false;
 		}
 		for (IImportDeclaration import_mock : unit.getImports()) {
-			if (import_mock.getElementName().contains("mockito") || import_mock.getElementName().contains("easymock")) {
+			if (import_mock.getElementName().contains("powermock") || import_mock.getElementName().contains("springframework")) {
 				return true;
 			}
 		}
@@ -55,8 +55,8 @@ public class GetInfo extends AbstractHandler {
 
 	private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
 
-		ArrayList<String> mockito_arr = new ArrayList<>();
-		ArrayList<String> easymock_arr = new ArrayList<>();
+		ArrayList<String> PowerMock_arr = new ArrayList<>();
+		ArrayList<String> SpringFramework_arr = new ArrayList<>();
 		ArrayList<String> have_mock = new ArrayList<>();
 
 		ArrayList<String> err_arr = new ArrayList<>();
@@ -76,16 +76,16 @@ public class GetInfo extends AbstractHandler {
 							CompilationUnit parse = parse(unit);
 							if (Import_mock(unit)) {
 								try {
-									MethodVisitor visitor = new MethodVisitor();
+									Top2_4Visitor visitor = new Top2_4Visitor();
 									parse.accept(visitor);
 									System.out.println(unit.getPath().toString());
-									for (MethodInvocation Mockito_method : visitor.getMockitoMethodInvocations()) {
-										mockito_arr
+									for (MethodInvocation Mockito_method : visitor.getPowerMockMethodInvocations()) {
+										PowerMock_arr
 												.add(unit.getPath().toString() + "," + Mockito_method.getName() + '\n');
 									}
 
-									for (MethodInvocation EasyMock_method : visitor.getEasyMockMethodInvocations()) {
-										easymock_arr.add(
+									for (MethodInvocation EasyMock_method : visitor.getSpringFrameworkMethodInvocations()) {
+										SpringFramework_arr.add(
 												unit.getPath().toString() + "," + EasyMock_method.getName() + '\n');
 									}
 								} catch (NullPointerException e) {
@@ -112,14 +112,14 @@ public class GetInfo extends AbstractHandler {
 		}
 //		print_to_csv(projects[0].getName());
 
-		String mockito_out = "new_RQ2\\mockito\\" + projects[0].getName() + ".csv";
-		String easymock_out = "new_RQ2\\easymock\\" + projects[0].getName() + ".csv";
+		String PowerMock_out = "new_RQ2\\powerMock\\" + projects[0].getName() + ".csv";
+		String SpringFramework_out = "new_RQ2\\springframework\\" + projects[0].getName() + ".csv";
 		String err = "new_RQ2\\err\\" + projects[0].getName() + ".csv";
 		String RQ4_out = "RQ4\\" + projects[0].getName() + ".csv";
 		System.out.println("Start writing");
-		print_arr_to_csv(mockito_arr, mockito_out);
+		print_arr_to_csv(PowerMock_arr, PowerMock_out);
 
-		print_arr_to_csv(easymock_arr, easymock_out);
+		print_arr_to_csv(SpringFramework_arr, SpringFramework_out);
 
 		print_arr_to_csv(have_mock, RQ4_out);
 
