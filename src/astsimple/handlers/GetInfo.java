@@ -46,7 +46,7 @@ public class GetInfo extends AbstractHandler {
 			return false;
 		}
 		for (IImportDeclaration import_mock : unit.getImports()) {
-			if (import_mock.getElementName().contains("powermock") || import_mock.getElementName().contains("springframework")) {
+			if (import_mock.getElementName().contains("powermock") || (import_mock.getElementName().contains("springframework")&&import_mock.getElementName().toLowerCase().contains("mock"))) {
 				return true;
 			}
 		}
@@ -56,8 +56,8 @@ public class GetInfo extends AbstractHandler {
 	private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
 
 		ArrayList<String> PowerMock_arr = new ArrayList<>();
-		ArrayList<String> SpringFramework_arr = new ArrayList<>();
-		ArrayList<String> have_mock = new ArrayList<>();
+//		ArrayList<String> SpringFramework_arr = new ArrayList<>();
+//		ArrayList<String> have_mock = new ArrayList<>();
 
 		ArrayList<String> err_arr = new ArrayList<>();
 
@@ -81,13 +81,13 @@ public class GetInfo extends AbstractHandler {
 									System.out.println(unit.getPath().toString());
 									for (MethodInvocation Mockito_method : visitor.getPowerMockMethodInvocations()) {
 										PowerMock_arr
-												.add(unit.getPath().toString() + "," + Mockito_method.getName() + '\n');
+												.add(unit.getPath().toString() + "," + Mockito_method.getName()+ "," + Mockito_method.resolveMethodBinding().getDeclaringClass().getQualifiedName()+ '\n');
 									}
 
-									for (MethodInvocation EasyMock_method : visitor.getSpringFrameworkMethodInvocations()) {
-										SpringFramework_arr.add(
-												unit.getPath().toString() + "," + EasyMock_method.getName() + '\n');
-									}
+//									for (MethodInvocation EasyMock_method : visitor.getSpringFrameworkMethodInvocations()) {
+//										SpringFramework_arr.add(
+//												unit.getPath().toString() + "," + EasyMock_method.getName() + '\n');
+//									}
 								} catch (NullPointerException e) {
 									System.err.println(unit.getPath().toString());
 									err_arr.add(unit.getPath().toString() + '\n');
@@ -113,15 +113,15 @@ public class GetInfo extends AbstractHandler {
 //		print_to_csv(projects[0].getName());
 
 		String PowerMock_out = "new_RQ2\\powerMock\\" + projects[0].getName() + ".csv";
-		String SpringFramework_out = "new_RQ2\\springframework\\" + projects[0].getName() + ".csv";
+//		String SpringFramework_out = "new_RQ2\\springframework\\" + projects[0].getName() + ".csv";
 		String err = "new_RQ2\\err\\" + projects[0].getName() + ".csv";
 		String RQ4_out = "RQ4\\" + projects[0].getName() + ".csv";
 		System.out.println("Start writing");
 		print_arr_to_csv(PowerMock_arr, PowerMock_out);
 
-		print_arr_to_csv(SpringFramework_arr, SpringFramework_out);
+//		print_arr_to_csv(SpringFramework_arr, SpringFramework_out);
 
-		print_arr_to_csv(have_mock, RQ4_out);
+//		print_arr_to_csv(have_mock, RQ4_out);
 
 		print_arr_to_csv(err_arr, err);
 
@@ -130,7 +130,7 @@ public class GetInfo extends AbstractHandler {
 	private void print_arr_to_csv(ArrayList<String> data, String path) {
 		if (data.size() > 0) {
 			try (FileOutputStream fos = new FileOutputStream(path)) {
-				fos.write("file_path,method\n".getBytes());
+				fos.write("file_path,method,api\n".getBytes());
 				for (String x : data) {
 					fos.write(x.getBytes());
 				}
