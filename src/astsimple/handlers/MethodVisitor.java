@@ -15,33 +15,9 @@ public class MethodVisitor extends ASTVisitor {
 
 	List<MethodInvocation> mockito_methods = new ArrayList<>();
 	List<MethodInvocation> easymock_methods = new ArrayList<>();
-
-
 	List<MethodInvocation> methodInvocation = new ArrayList<>();
 
-//
-//	private TypeDeclaration parentTypeDeclaration;
-//	private MethodDeclaration parentMethodDeclaration;
-//
-//	private final Map<MethodInvocation, ASTNode> methodInvocations = Map.of();
-//
-//	public void endVisit(TypeDeclaration typeDeclaration) {
-//		this.parentTypeDeclaration = null;
-//	}
-//
-//	public void endVisit(MethodDeclaration methodDeclaration) {
-//		this.parentMethodDeclaration = null;
-//	}
-//
-//	public boolean visit(TypeDeclaration typeDeclaration) {
-//		this.parentTypeDeclaration = typeDeclaration;
-//		return true;
-//	}
-//
-//	public boolean visit(MethodDeclaration methodDeclaration) {
-//		this.parentMethodDeclaration = parentMethodDeclaration;
-//		return true;
-//	}
+
 
 	@Override
 	public boolean visit(MethodInvocation node) {

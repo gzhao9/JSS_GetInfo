@@ -1,11 +1,8 @@
-package astsimple.handlers;
+package astsimple.sequencepaser;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -17,31 +14,28 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IPackageBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import astsimple.handlers.MockitoVisitor;
-import astsimple.handlers.MockitoVisitor.MockitoMockInfo;
-import astsimple.handlers.TestCaseObjectVisitor.TestCaseObject;
+import astsimple.handlers.MockedObjectVisitor;
+
 
 public class GetInfo extends AbstractHandler {
 	private static final String JDT_NATURE = "org.eclipse.jdt.core.javanature";
-//	private IWorkspace workspace = ResourcesPlugin.getWorkspace();
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		IProject[] projects = root.getProjects();
-
+//		System.out.println(projects.length);
+//		get the mockito and easy mock api
 		try {
 			GetMockitoEasyMock_API(projects);
 		} catch (CoreException e) {
@@ -55,7 +49,7 @@ public class GetInfo extends AbstractHandler {
 			return false;
 		}
 		for (IImportDeclaration import_mock : unit.getImports()) {
-			if (import_mock.getElementName().contains("mockito")) {
+			if (import_mock.getElementName().contains("powermock") || (import_mock.getElementName().contains("springframework")&&import_mock.getElementName().toLowerCase().contains("mock"))) {
 				return true;
 			}
 		}
@@ -63,8 +57,8 @@ public class GetInfo extends AbstractHandler {
 	}
 
 	private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
-		ArrayList<String> MockedClass = new ArrayList<>();
-		ArrayList<String> MockedMethod = new ArrayList<>();
+
+//		ArrayList<String> PowerMock_arr = new ArrayList<>();
 		ArrayList<String> err_arr = new ArrayList<>();
 
 //		go throw all the project
@@ -81,62 +75,40 @@ public class GetInfo extends AbstractHandler {
 							// now create the AST for the ICompilationUnits
 							CompilationUnit parse = parse(unit);
 							if (Import_mock(unit)) {
-
 								try {
-									TestCaseObjectVisitor mockobjectvisitor = new TestCaseObjectVisitor();
-
-									parse.accept(mockobjectvisitor);
-//									System.out.println(unit.getPath().toString());							
-									String packageName=unit.getPackageDeclarations()[0].getElementName().toString();
-							        String fileName = unit.getElementName().toString().replace(".java", "");
-							        String longName = packageName + '.' + fileName;
-									System.out.println("   "+longName);
-									Map<String, TestCaseObject> testCases = mockobjectvisitor.getTestCaseRecord();
-//									 get the class level
-									for (String testCase : testCases.keySet()) {
-										Map<String, String> object_records = testCases.get(testCase).object_recording;
-										Map<String, String> method_records = testCases.get(testCase).method_recording;
-										
-										for (String objectReocrd : object_records.keySet()) {
-											MockedClass.add(unit.getPath().toString()+ "|" +longName + "." + testCase + "|"+String.join(",", testCases.get(testCase).annotations)+ "|"
-													+ objectReocrd + "|" + object_records.get(objectReocrd) + "\n");
-										}
-										// get the method level
-										for (String method_record : method_records.keySet()) {
-											MockedMethod.add(unit.getPath().toString()+ "|" +longName + "." + testCase + "|"+String.join(",", testCases.get(testCase).annotations)+ "|"
-													+ method_record + "|" + method_records.get(method_record) + "\n");
-										}
-									}
-//									
+									MockedObjectVisitor visitor = new MockedObjectVisitor();
+									parse.accept(visitor);
+//									System.out.println(unit.getPath().toString());
+//									for (MethodInvocation Mockito_method : visitor.getPowerMockMethodInvocations()) {
+//										PowerMock_arr
+//												.add(unit.getPath().toString() + "," + Mockito_method.getName()+ "," + Mockito_method.resolveMethodBinding().getDeclaringClass().getQualifiedName()+ '\n');
+//									}
 
 								} catch (NullPointerException e) {
 									System.err.println(unit.getPath().toString());
 									err_arr.add(unit.getPath().toString() + '\n');
 								}
-
-							}
+							} 						
 
 						}
 
 					}
-
 				}
 			}
 		}
 
-		String MockObjectPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
-				+ projects[0].getName() + " Class_level.csv";
-		String MockmtehodPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
-				+ projects[0].getName() + " Method_level.csv";
-		print_arr_to_csv(MockedClass, MockObjectPath);
-		print_arr_to_csv(MockedMethod, MockmtehodPath);
+//		String PowerMock_out = "new_RQ2\\powerMock\\" + projects[0].getName() + ".csv";
+//		String err = "new_RQ2\\err\\" + projects[0].getName() + ".csv";
+//		System.out.println("Start writing");
+//		print_arr_to_csv(PowerMock_arr, PowerMock_out);
+//		print_arr_to_csv(err_arr, err);
 
 	}
 
 	private void print_arr_to_csv(ArrayList<String> data, String path) {
 		if (data.size() > 0) {
 			try (FileOutputStream fos = new FileOutputStream(path)) {
-				fos.write("path|test case|object|annotations|label\n".getBytes());
+				fos.write("file_path,method,api\n".getBytes());
 				for (String x : data) {
 					fos.write(x.getBytes());
 				}
@@ -144,8 +116,7 @@ public class GetInfo extends AbstractHandler {
 				// Flush the written bytes to the file
 				fos.flush();
 
-				System.out.println(
-						"Text has  been  written to " + (new File(path)).getAbsolutePath() + '\t' + data.size());
+				System.out.println("Text has  been  written to " + (new File(path)).getAbsolutePath()+'\t'+data.size());
 
 			} catch (Exception e2) {
 				e2.printStackTrace();
