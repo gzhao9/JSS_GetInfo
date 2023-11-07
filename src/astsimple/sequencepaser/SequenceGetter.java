@@ -24,9 +24,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 
 public class SequenceGetter extends AbstractHandler {
-    private ArrayList<String> mockedClasses = new ArrayList<>();
-    private ArrayList<String> mockedMethods = new ArrayList<>();
-    private ArrayList<String> errorArray = new ArrayList<>();
+  ArrayList<SequenceInfo> sequences = new ArrayList<>();
     private static final String JDT_NATURE = "org.eclipse.jdt.core.javanature";
 
     @Override
@@ -90,32 +88,30 @@ public class SequenceGetter extends AbstractHandler {
     }
 
     private void printResults(String projectName) {
-        String mockObjectPath = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projectName + " Class_level.csv";
-        String mockMethodPath = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projectName + " Method_level.csv";
-        printArrayToCsv(mockedClasses, mockObjectPath);
-        printArrayToCsv(mockedMethods, mockMethodPath);
+      String path = "";
+      if (sequences.size() > 0) {
+        try (FileOutputStream fos = new FileOutputStream(path)) {
+          fos.write("[\n".getBytes());
+          for (SequenceInfo x : sequences) {
+            fos.write("\n".getBytes());
+            fos.write(x.toJson().getBytes());
+          }
+          fos.flush();
+          System.out.println("Text has  been  written to " + (new File(path)).getAbsolutePath()
+            + '\t' + sequences.size());
+        } catch (Exception e2) {
+          e2.printStackTrace();
+
+        }
+      }
     }
 
-    private void printArrayToCsv(ArrayList<String> data, String path) {
-        if (!data.isEmpty()) {
-            try (FileOutputStream fos = new FileOutputStream(path)) {
-                fos.write("path|test case|annotations|object|label\n".getBytes());
-                for (String record : data) {
-                    fos.write(record.getBytes());
-                }
-                fos.flush();
-                System.out.println("Text has been written to " + (new File(path)).getAbsolutePath() + '\t' + data.size());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private static CompilationUnit parse(ICompilationUnit unit) {
-        ASTParser parser = ASTParser.newParser(AST.JLS16);
+      ASTParser parser = ASTParser.newParser(AST.JLS8);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setSource(unit);
         parser.setResolveBindings(true);
-        return (CompilationUnit) parser.createAST(null); // parse
+        return (CompilationUnit) parser.createAST(null);
     }
 }

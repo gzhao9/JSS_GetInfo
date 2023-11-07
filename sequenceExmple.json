@@ -1,0 +1,21 @@
+[
+    {
+        "sequenceName": "name",
+        "MockedDependency": "com.emxple.class",
+        "filePath": "path",
+        "package": "package",
+        "testcase":"case",
+        "sequences": [
+            {
+                "rawStatement": "statement1",
+                "isMockitoStatement": true,
+                "fixedFormat": "fixedStatement"
+            },
+            {
+                "rawStatement": "statement1",
+                "isMockitoStatement": false,
+                "fixedFormat": "fixedStatement"
+            }
+        ]
+    }
+]
