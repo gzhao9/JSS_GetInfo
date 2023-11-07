@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -25,131 +26,121 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import astsimple.sequencepaser.TestCaseObjectVisitor.TestCaseObject;
 
 public class GetSequence extends AbstractHandler {
-	private static final String JDT_NATURE = "org.eclipse.jdt.core.javanature";
-//	private IWorkspace workspace = ResourcesPlugin.getWorkspace();
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
+    private ArrayList<String> MockedClass = new ArrayList<>();
+    private ArrayList<String> MockedMethod = new ArrayList<>();
+    private ArrayList<String> err_arr = new ArrayList<>();
+    private static final String JDT_NATURE = "org.eclipse.jdt.core.javanature";
 
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IWorkspaceRoot root = workspace.getRoot();
-		IProject[] projects = root.getProjects();
+    // private IWorkspace workspace = ResourcesPlugin.getWorkspace();
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
 
-		try {
-			GetMockitoEasyMock_API(projects);
-		} catch (CoreException e) {
-		}
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+        IWorkspaceRoot root = workspace.getRoot();
+        IProject[] projects = root.getProjects();
 
-		return null;
-	}
+        try {
+            GetMockitoEasyMock_API(projects);
+        } catch (CoreException e) {
+        }
 
-	private boolean Import_mock(ICompilationUnit unit) throws CoreException {
-		if (unit.getImports().length <= 0) {
-			return false;
-		}
-		for (IImportDeclaration import_mock : unit.getImports()) {
-			if (import_mock.getElementName().contains("mockito")) {
-				return true;
-			}
-		}
-		return false;
-	}
+        String MockObjectPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projects[0].getName() + " Class_level.csv";
+        String MockmtehodPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projects[0].getName() + " Method_level.csv";
+        print_arr_to_csv(MockedClass, MockObjectPath2);
+        print_arr_to_csv(MockedMethod, MockmtehodPath2);
 
-	private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
-		ArrayList<String> MockedClass = new ArrayList<>();
-		ArrayList<String> MockedMethod = new ArrayList<>();
-		ArrayList<String> err_arr = new ArrayList<>();
+        return null;
+    }
 
-//		go throw all the project
-		for (IProject project : projects) {
+    private boolean Import_mock(ICompilationUnit unit) throws CoreException {
+        if (unit.getImports().length <= 0) {
+            return false;
+        }
+        for (IImportDeclaration import_mock : unit.getImports()) {
+            if (import_mock.getElementName().contains("mockito")) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-			if (project.isNatureEnabled(JDT_NATURE)) {
+    private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
+        // go throw all the project
+        for (IProject project : projects) {
 
-				IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
-				for (IPackageFragment mypackage : packages) {
-					if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+            if (project.isNatureEnabled(JDT_NATURE)) {
+                IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
+                for (IPackageFragment mypackage : packages) {
+                    if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                        for (ICompilationUnit unit : mypackage.getCompilationUnits()) {// this is file level
+                            // now create the AST for the ICompilationUnits
+                            CompilationUnit parse = parse(unit);
+                            if (Import_mock(unit)) {
+                                analysisUnit(unit, parse);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-						for (ICompilationUnit unit : mypackage.getCompilationUnits()) {// this is file level
 
-							// now create the AST for the ICompilationUnits
-							CompilationUnit parse = parse(unit);
-							if (Import_mock(unit)) {
+    private void analysisUnit(ICompilationUnit unit, CompilationUnit parse)
+      throws JavaModelException {
+        try {
+            TestCaseObjectVisitor mockobjectvisitor = new TestCaseObjectVisitor();
 
-								try {
-									TestCaseObjectVisitor mockobjectvisitor = new TestCaseObjectVisitor();
+            parse.accept(mockobjectvisitor);
+            // System.out.println(unit.getPath().toString());
+            String packageName = unit.getPackageDeclarations()[0].getElementName().toString();
+            String fileName = unit.getElementName().toString().replace(".java", "");
+            String longName = packageName + '.' + fileName;
+            System.out.println("   " + longName);
+            Map<String, TestCaseObject> testCases = mockobjectvisitor.getTestCaseRecord();
+            // get the class level
+            for (String testCase : testCases.keySet()) {
+                Map<String, String> object_records = testCases.get(testCase).object_recording;
+                Map<String, String> method_records = testCases.get(testCase).method_recording;
 
-									parse.accept(mockobjectvisitor);
-//									System.out.println(unit.getPath().toString());							
-									String packageName=unit.getPackageDeclarations()[0].getElementName().toString();
-							        String fileName = unit.getElementName().toString().replace(".java", "");
-							        String longName = packageName + '.' + fileName;
-									System.out.println("   "+longName);
-									Map<String, TestCaseObject> testCases = mockobjectvisitor.getTestCaseRecord();
-//									 get the class level
-									for (String testCase : testCases.keySet()) {
-										Map<String, String> object_records = testCases.get(testCase).object_recording;
-										Map<String, String> method_records = testCases.get(testCase).method_recording;
-										
-										for (String objectReocrd : object_records.keySet()) {
-											MockedClass.add(unit.getPath().toString()+ "|" +longName + "." + testCase + "|"+String.join(",", testCases.get(testCase).annotations)+ "|"
-													+ objectReocrd + "|" + object_records.get(objectReocrd) + "\n");
-										}
-										// get the method level
-										for (String method_record : method_records.keySet()) {
-											MockedMethod.add(unit.getPath().toString()+ "|" +longName + "." + testCase + "|"+String.join(",", testCases.get(testCase).annotations)+ "|"
-													+ method_record + "|" + method_records.get(method_record) + "\n");
-										}
-									}
-//									
+                for (String objectReocrd : object_records.keySet()) {
+                    MockedClass.add(unit.getPath().toString() + "|" + longName + "." + testCase + "|" + String.join(",", testCases.get(testCase).annotations) + "|" + objectReocrd + "|" + object_records.get(objectReocrd) + "\n");
+                }
+                // get the method level
+                for (String method_record : method_records.keySet()) {
+                    MockedMethod.add(unit.getPath().toString() + "|" + longName + "." + testCase + "|" + String.join(",", testCases.get(testCase).annotations) + "|" + method_record + "|" + method_records.get(method_record) + "\n");
+                }
+            }
+            //
 
-								} catch (NullPointerException e) {
-									System.err.println(unit.getPath().toString());
-									err_arr.add(unit.getPath().toString() + '\n');
-								}
+        } catch (NullPointerException e) {
+            System.err.println(unit.getPath().toString());
+            err_arr.add(unit.getPath().toString() + '\n');
+        }
+    }
 
-							}
+    private void print_arr_to_csv(ArrayList<String> data, String path) {
+        if (data.size() > 0) {
+            try (FileOutputStream fos = new FileOutputStream(path)) {
+                fos.write("path|test case|annotations|object|label\n".getBytes());
+                for (String x : data) {
+                    fos.write(x.getBytes());
+                }
+                // Flush the written bytes to the file
+                fos.flush();
+                System.out.println("Text has  been  written to " + (new File(path)).getAbsolutePath() + '\t' + data.size());
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
+    }
 
-						}
-
-					}
-
-				}
-			}
-		}
-		
-		String MockObjectPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\"
-				+ projects[0].getName() + " Class_level.csv";
-		print_arr_to_csv(MockedClass, MockObjectPath2);
-
-	}
-
-	private void print_arr_to_csv(ArrayList<String> data, String path) {
-		if (data.size() > 0) {
-			try (FileOutputStream fos = new FileOutputStream(path)) {
-        fos.write("path|test case|annotations|object|label\n".getBytes());
-				for (String x : data) {
-					fos.write(x.getBytes());
-				}
-
-				// Flush the written bytes to the file
-				fos.flush();
-
-				System.out.println(
-						"Text has  been  written to " + (new File(path)).getAbsolutePath() + '\t' + data.size());
-
-			} catch (Exception e2) {
-				e2.printStackTrace();
-
-			}
-		}
-
-	}
-
-	private static CompilationUnit parse(ICompilationUnit unit) {
-		ASTParser parser = ASTParser.newParser(AST.JLS16);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-//		parser.setKind(ASTParser.K_CLASS_BODY_DECLARATIONS);
-		parser.setSource(unit);
-		parser.setResolveBindings(true);
-		return (CompilationUnit) parser.createAST(null); // parse
-	}
+    private static CompilationUnit parse(ICompilationUnit unit) {
+        ASTParser parser = ASTParser.newParser(AST.JLS16);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        // parser.setKind(ASTParser.K_CLASS_BODY_DECLARATIONS);
+        parser.setSource(unit);
+        parser.setResolveBindings(true);
+        return (CompilationUnit) parser.createAST(null); // parse
+    }
 }
