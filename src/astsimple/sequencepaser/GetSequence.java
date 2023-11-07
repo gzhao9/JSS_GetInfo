@@ -43,12 +43,7 @@ public class GetSequence extends AbstractHandler {
             GetMockitoEasyMock_API(projects);
         } catch (CoreException e) {
         }
-
-        String MockObjectPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projects[0].getName() + " Class_level.csv";
-        String MockmtehodPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projects[0].getName() + " Method_level.csv";
-        print_arr_to_csv(MockedClass, MockObjectPath2);
-        print_arr_to_csv(MockedMethod, MockmtehodPath2);
-
+        print_result(projects[0].getName());
         return null;
     }
 
@@ -65,29 +60,32 @@ public class GetSequence extends AbstractHandler {
     }
 
     private void GetMockitoEasyMock_API(IProject[] projects) throws CoreException {
-        // go throw all the project
         for (IProject project : projects) {
-
             if (project.isNatureEnabled(JDT_NATURE)) {
-                IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
-                for (IPackageFragment mypackage : packages) {
-                    if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                        for (ICompilationUnit unit : mypackage.getCompilationUnits()) {// this is file level
-                            // now create the AST for the ICompilationUnits
-                            CompilationUnit parse = parse(unit);
-                            if (Import_mock(unit)) {
-                                analysisUnit(unit, parse);
-                            }
-                        }
-                    }
-                }
+                analyzeJavaProjectPackages(JavaCore.create(project).getPackageFragments());
+            }
+        }
+    }
+
+    private void analyzeJavaProjectPackages(IPackageFragment[] packages) throws CoreException {
+        for (IPackageFragment mypackage : packages) {
+            if (mypackage.getKind() != IPackageFragmentRoot.K_SOURCE) {
+                analyzePackageCompilationUnits(mypackage.getCompilationUnits());
+            }
+        }
+    }
+
+    private void analyzePackageCompilationUnits(ICompilationUnit[] compilationUnits) throws CoreException {
+        for (ICompilationUnit unit : compilationUnits) {
+            CompilationUnit parsedUnit = parse(unit);
+            if (Import_mock(unit)) {
+                analysisUnit(unit, parsedUnit);
             }
         }
     }
 
 
-    private void analysisUnit(ICompilationUnit unit, CompilationUnit parse)
-      throws JavaModelException {
+    private void analysisUnit(ICompilationUnit unit, CompilationUnit parse) throws JavaModelException {
         try {
             TestCaseObjectVisitor mockobjectvisitor = new TestCaseObjectVisitor();
 
@@ -117,6 +115,18 @@ public class GetSequence extends AbstractHandler {
             System.err.println(unit.getPath().toString());
             err_arr.add(unit.getPath().toString() + '\n');
         }
+    }
+
+    private void print_result(String projectName) {
+        String MockObjectPath2 =
+                "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projectName
+                        + " Class_level.csv";
+        String MockmtehodPath2 =
+                "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\" + projectName
+                        + " Method_level.csv";
+        print_arr_to_csv(MockedClass, MockObjectPath2);
+        print_arr_to_csv(MockedMethod, MockmtehodPath2);
+
     }
 
     private void print_arr_to_csv(ArrayList<String> data, String path) {
