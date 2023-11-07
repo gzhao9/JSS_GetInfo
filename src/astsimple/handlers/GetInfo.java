@@ -3,8 +3,6 @@ package astsimple.handlers;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -17,19 +15,13 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IPackageBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import astsimple.handlers.MockitoVisitor;
-import astsimple.handlers.MockitoVisitor.MockitoMockInfo;
 import astsimple.handlers.TestCaseObjectVisitor.TestCaseObject;
 
 public class GetInfo extends AbstractHandler {
@@ -124,19 +116,24 @@ public class GetInfo extends AbstractHandler {
 			}
 		}
 
-		String MockObjectPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
+//		String MockObjectPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
+//				+ projects[0].getName() + " Class_level.csv";
+//		String MockmtehodPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
+//				+ projects[0].getName() + " Method_level.csv";
+		
+		String MockObjectPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\"
 				+ projects[0].getName() + " Class_level.csv";
-		String MockmtehodPath = "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 aSpring\\task\\mock-test case analysis\\analysis tool\\"
+		String MockmtehodPath2 = "C:\\Users\\gzhao9\\OneDrive - stevens.edu\\PHD\\2023 Fall\\Mocking clone\\"
 				+ projects[0].getName() + " Method_level.csv";
-		print_arr_to_csv(MockedClass, MockObjectPath);
-		print_arr_to_csv(MockedMethod, MockmtehodPath);
+		print_arr_to_csv(MockedClass, MockObjectPath2);
+		print_arr_to_csv(MockedMethod, MockmtehodPath2);
 
 	}
 
 	private void print_arr_to_csv(ArrayList<String> data, String path) {
 		if (data.size() > 0) {
 			try (FileOutputStream fos = new FileOutputStream(path)) {
-				fos.write("path|test case|object|annotations|label\n".getBytes());
+        fos.write("path|test case|annotations|object|label\n".getBytes());
 				for (String x : data) {
 					fos.write(x.getBytes());
 				}
