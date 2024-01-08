@@ -4,7 +4,11 @@
         "MockedDependency": "com.emxple.class",
         "filePath": "path",
         "package": "package",
-        "testcase":"case",
+        "testcase": "case",
+        "annotates": [
+            "",
+            ""
+        ],
         "sequences": [
             {
                 "rawStatement": "statement1",

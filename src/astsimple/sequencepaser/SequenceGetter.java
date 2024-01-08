@@ -22,6 +22,9 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import astsimple.handlers.SequenceInfo;
+import astsimple.handlers.SequenceVisitor;
+
 
 public class SequenceGetter extends AbstractHandler {
   ArrayList<SequenceInfo> sequences = new ArrayList<>();
@@ -29,17 +32,22 @@ public class SequenceGetter extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
-
-        IWorkspace workspace = ResourcesPlugin.getWorkspace();
-        IWorkspaceRoot root = workspace.getRoot();
-        IProject[] projects = root.getProjects();
-
+      IWorkspace workspace = ResourcesPlugin.getWorkspace();
+      IWorkspaceRoot root = workspace.getRoot();
+      // Get all projects in the workspace
+      IProject[] projects = root.getProjects();
+      // Loop over all projects
+      for (IProject project : projects) {
         try {
-            getMockitoEasyMockApi(projects);
+          if (project.isNatureEnabled(JDT_NATURE)) {
+            analyseMethods(project);
+          }
         } catch (CoreException e) {
-            // Handle the exception appropriately
+          e.printStackTrace();
         }
-        printResults(projects[0].getName());
+      }
+      // printResults(projects[0].getName());
+
         return null;
     }
 
@@ -55,34 +63,34 @@ public class SequenceGetter extends AbstractHandler {
         return false;
     }
 
-    private void getMockitoEasyMockApi(IProject[] projects) throws CoreException {
-        for (IProject project : projects) {
-            if (project.isNatureEnabled(JDT_NATURE)) {
-                analyzeJavaProjectPackages(JavaCore.create(project).getPackageFragments());
-            }
+    private void analyseMethods(IProject project) throws JavaModelException {
+      IPackageFragment[] packages = JavaCore.create(project).getPackageFragments();
+      // parse(JavaCore.create(project));
+      for (IPackageFragment mypackage : packages) {
+        if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+          createAST(mypackage);
         }
+
+      }
     }
 
-    private void analyzeJavaProjectPackages(IPackageFragment[] packages) throws CoreException {
-        for (IPackageFragment myPackage : packages) {
-            if (myPackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                analyzePackageCompilationUnits(myPackage.getCompilationUnits());
-            }
-        }
+    private void createAST(IPackageFragment mypackage) throws JavaModelException {
+      for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
+        // now create the AST for the ICompilationUnits
+        CompilationUnit parse = parse(unit);
+        SequenceVisitor visitor = new SequenceVisitor();
+        parse.accept(visitor);
+        analyzeUnit(visitor);
+        for (SequenceInfo sequence : visitor.getSequences()) {
+          System.out.print(sequence.toJson());
+          }
+
+      }
     }
 
-    private void analyzePackageCompilationUnits(ICompilationUnit[] compilationUnits) throws CoreException {
-        for (ICompilationUnit unit : compilationUnits) {
-            CompilationUnit parsedUnit = parse(unit);
-            if (importMock(unit)) {
-                analyzeUnit(unit, parsedUnit);
-            }
-        }
-    }
-
-    private void analyzeUnit(ICompilationUnit unit, CompilationUnit parse) throws JavaModelException {
+    private void analyzeUnit(SequenceVisitor visitor) throws JavaModelException {
         try {
-
+        sequences.addAll(visitor.getSequences());
         } catch (NullPointerException e) {
         }
     }
@@ -101,7 +109,6 @@ public class SequenceGetter extends AbstractHandler {
             + '\t' + sequences.size());
         } catch (Exception e2) {
           e2.printStackTrace();
-
         }
       }
     }
