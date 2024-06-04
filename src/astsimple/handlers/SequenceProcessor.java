@@ -67,7 +67,14 @@ public class SequenceProcessor {
         (VariableDeclarationFragment) variable.fragments().get(0);
       if (initializerFragment.getInitializer() instanceof MethodInvocation) {
         MethodInvocation createMethod = (MethodInvocation) initializerFragment.getInitializer();
-        if (createMethod.getName().toString().toLowerCase().contains("mock")) {
+        IMethodBinding binding = createMethod.resolveMethodBinding();
+        if ((binding != null) && (binding.getDeclaringClass() != null)) {
+            String bindingName = binding.getDeclaringClass().getQualifiedName();
+            if(!bindingName.startsWith("org.mockito")) {
+            	return false;
+            }
+        }
+        if (createMethod.getName().toString().toLowerCase().equals("mock")) {
           return true;
         }
       }

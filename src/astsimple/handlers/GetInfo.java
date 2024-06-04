@@ -43,7 +43,8 @@ public class GetInfo extends AbstractHandler {
       }
     }
     String outPutPath =
-      "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 Fall\\clone detection\\parserResult"
+//      "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 Fall\\clone detection\\parserResult\\"
+    	"C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2024 S\\mock clone detection\\parserResult\\"
         + projects[0].getName() + "-Result.json";
     printResults(outPutPath);
 
