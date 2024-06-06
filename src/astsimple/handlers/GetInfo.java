@@ -34,13 +34,16 @@ public class GetInfo extends AbstractHandler {
     IProject[] projects = root.getProjects();
     // Loop over all projects
     for (IProject project : projects) {
-      try {
-        if (project.isNatureEnabled(JDT_NATURE)) {
-          analyseMethods(project);
-        }
-      } catch (CoreException e) {
-        e.printStackTrace();
-      }
+
+        try {
+			if (project.isNatureEnabled(JDT_NATURE)) {
+			  analyseMethods(project);
+			}
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
     }
     String outPutPath =
 //      "C:\\Users\\10590\\OneDrive - stevens.edu\\PHD\\2023 Fall\\clone detection\\parserResult\\"
@@ -80,6 +83,7 @@ public class GetInfo extends AbstractHandler {
       if (!importMock(unit)) {
         continue;
       }
+      try {
       CompilationUnit parse = parse(unit);
       SequenceVisitor visitor = new SequenceVisitor();
       parse.accept(visitor);
@@ -90,6 +94,10 @@ public class GetInfo extends AbstractHandler {
         sequence.filePath = unit.getPath().toString();
         sequences.add(sequence);
       }
+     }
+      catch (CoreException e) {
+          e.printStackTrace();
+        }
     }
   }
 
