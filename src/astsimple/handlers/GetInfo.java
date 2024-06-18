@@ -42,6 +42,7 @@ public class GetInfo extends AbstractHandler {
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.err.println("skipped "+project.getName());
 		}
 
     }
